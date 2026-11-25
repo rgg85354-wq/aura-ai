@@ -1,0 +1,58 @@
+# Runs the server tests and checks that deploy/setup-server.sh installs a working
+# server on a clean Ubuntu machine (the same steps you run on Oracle Cloud or Google Cloud).
+name: Server
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "server/**"
+      - "deploy/**"
+      - ".github/workflows/server.yml"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+        working-directory: server
+      - run: npm test
+        working-directory: server
+
+  deploy-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install with the deploy script
+        run: |
+          sudo env ANTHROPIC_API_KEY=test-key IMAGE_API_KEY= AURA_DOMAIN=aura.invalid AURA_HTTPS_TRIES=1 \
+            AURA_REPO="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
+            bash deploy/setup-server.sh < /dev/null
+      - name: Service is up
+        run: |
+          systemctl is-active aura caddy
+          curl -fsS http://127.0.0.1:8787/api/health
+          sudo test -f /etc/aura/aura.env
+          sudo grep -q '^ANTHROPIC_API_KEY=test-key$' /etc/aura/aura.env
+      - name: Register and chat through the installed server
+        run: |
+          TOKEN=$(curl -fsS -X POST http://127.0.0.1:8787/api/auth/register -H 'Content-Type: application/json' \
+            -d '{"name":"CI","email":"ci@example.com","password":"password123"}' | jq -r .token)
+          curl -fsS -X POST http://127.0.0.1:8787/api/chats -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' -d '{"mode":"chat"}' | jq -e '.chat.id'
+      - name: Re-run keeps keys and data (update path)
+        run: |
+          sudo env AURA_DOMAIN=aura.invalid AURA_HTTPS_TRIES=1 AURA_REPO="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
+            bash deploy/setup-server.sh < /dev/null
+          sudo grep -q '^ANTHROPIC_API_KEY=test-key$' /etc/aura/aura.env
+          curl -fsS -X POST http://127.0.0.1:8787/api/auth/login -H 'Content-Type: application/json' \
+            -d '{"email":"ci@example.com","password":"password123"}' | jq -e .token
+      - name: Logs on failure
+        if: failure()
+        run: |
+          sudo journalctl -u aura -n 80 --no-pager || true
+          sudo journalctl -u caddy -n 40 --no-pager || true
