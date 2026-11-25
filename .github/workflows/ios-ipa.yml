@@ -1,0 +1,123 @@
+# Builds the iOS app on a GitHub-hosted Mac and publishes the .ipa as a build artifact.
+#
+# Without secrets: an unsigned IPA (AuraAI-unsigned.ipa). Install it on an iPhone with
+# Sideloadly or AltStore, which sign it with your Apple ID.
+#
+# With these repository secrets the workflow also produces a signed IPA:
+#   IOS_CERTIFICATE_P12_BASE64   Apple distribution or development certificate (.p12), base64
+#   IOS_CERTIFICATE_PASSWORD     password of that .p12
+#   IOS_PROVISION_PROFILE_BASE64 matching provisioning profile (.mobileprovision), base64
+#   IOS_TEAM_ID                  your Apple Developer Team ID
+#   IOS_EXPORT_METHOD            optional: ad-hoc (default), development or app-store
+name: iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-ipa.yml"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      PROJECT: ios/AuraAI.xcodeproj
+      SCHEME: AuraAI
+      HAS_SIGNING: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 != '' && secrets.IOS_PROVISION_PROFILE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build unsigned archive
+        run: |
+          mkdir -p build
+          xcodebuild archive \
+            -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/AuraAI-unsigned.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            2>&1 | tee build/xcodebuild.log | grep -E "error:|warning: .*deprecated|\*\* ARCHIVE" || true
+          test -d build/AuraAI-unsigned.xcarchive/Products/Applications/AuraAI.app
+
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p build/Payload
+          cp -R build/AuraAI-unsigned.xcarchive/Products/Applications/AuraAI.app build/Payload/
+          (cd build && zip -qry AuraAI-unsigned.ipa Payload)
+          ls -lh build/AuraAI-unsigned.ipa
+
+      - name: Install signing certificate and profile
+        if: env.HAS_SIGNING == 'true'
+        env:
+          P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          echo -n "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          echo -n "$PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN"
+          PROFILE_UUID=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract UUID raw -)
+          PROFILE_NAME=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract Name raw -)
+          BUNDLE_ID=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | plutil -extract Entitlements.application-identifier raw - | cut -d. -f2-)
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$RUNNER_TEMP/profile.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "BUNDLE_ID=$BUNDLE_ID" >> "$GITHUB_ENV"
+
+      - name: Build signed IPA
+        if: env.HAS_SIGNING == 'true'
+        env:
+          TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          EXPORT_METHOD: ${{ secrets.IOS_EXPORT_METHOD || 'ad-hoc' }}
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/AuraAI.xcarchive \
+            DEVELOPMENT_TEAM="$TEAM_ID" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CODE_SIGN_STYLE=Manual PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            2>&1 | tail -20
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>${EXPORT_METHOD}</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict><key>${BUNDLE_ID}</key><string>${PROFILE_NAME}</string></dict>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive -archivePath build/AuraAI.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist -exportPath build/signed
+          mv build/signed/*.ipa build/AuraAI-signed.ipa
+          ls -lh build/AuraAI-signed.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuraAI-ipa
+          path: build/*.ipa
+          if-no-files-found: error
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: build/xcodebuild.log
+          if-no-files-found: ignore

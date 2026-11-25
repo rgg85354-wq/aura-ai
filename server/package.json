@@ -1,0 +1,23 @@
+{
+  "name": "aura-server",
+  "version": "1.0.0",
+  "description": "Backend for Aura AI: accounts, chat sync, Claude, image generation, subscriptions",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/index.js",
+    "dev": "node --env-file-if-exists=.env --watch src/index.js",
+    "test": "node test/smoke.js && node test/stream.js",
+    "smoke": "node test/smoke.js",
+    "test:stream": "node test/stream.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
+    "@apple/app-store-server-library": "^3.1.0",
+    "express": "^5.3.0",
+    "google-auth-library": "^11.3.4"
+  }
+}

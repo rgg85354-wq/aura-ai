@@ -1,0 +1,82 @@
+{
+  "identifier" : "A5A1C0DE",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "ru",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [
+
+      ],
+      "name" : "Aura Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6500000001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Больше сообщений и изображений",
+              "displayName" : "Aura Pro — месяц",
+              "locale" : "ru"
+            }
+          ],
+          "productID" : "aura_pro_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Aura Pro Monthly",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6500000002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Больше сообщений и изображений",
+              "displayName" : "Aura Pro — год",
+              "locale" : "ru"
+            }
+          ],
+          "productID" : "aura_pro_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Aura Pro Yearly",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
