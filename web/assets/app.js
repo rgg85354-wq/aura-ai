@@ -1130,14 +1130,15 @@
 
   // ---------- boot ----------
   async function boot() {
+    render();
     // When the page is served by the Aura server itself, use it automatically.
-    if (!S.server && /^https?:$/.test(location.protocol)) {
+    // GitHub Pages only hosts static files, so there is nothing to probe there.
+    if (!S.server && /^https?:$/.test(location.protocol) && !location.hostname.endsWith(".github.io")) {
       try {
         const res = await fetch(`${location.origin}/api/health`);
-        if (res.ok && (await res.json()).ok) { S.server = location.origin; store.set("server", S.server); }
+        if (res.ok && (await res.json()).ok) { S.server = location.origin; store.set("server", S.server); render(); }
       } catch {}
     }
-    render();
     if (S.token) sync();
   }
   boot();
