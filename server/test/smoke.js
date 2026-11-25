@@ -65,6 +65,20 @@ try {
   assert.equal(health.data.ok, true);
   step("health");
 
+  const preflight = await fetch(`${base}/api/chats`, { method: "OPTIONS" });
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get("access-control-allow-origin"), "*");
+  assert.match(preflight.headers.get("access-control-allow-headers"), /Authorization/);
+  const landing = await fetch(`${base}/`);
+  assert.equal(landing.status, 200);
+  assert.match(await landing.text(), /Aura AI/);
+  const webApp = await fetch(`${base}/app/`);
+  assert.equal(webApp.status, 200);
+  assert.match(await webApp.text(), /assets\/app\.js/);
+  const missing = await fetch(`${base}/nope`);
+  assert.equal(missing.status, 404);
+  step("website + CORS");
+
   let r = await api("POST", "/api/auth/register", { name: "Тест", email: "Test@Example.com", password: "short" });
   assert.equal(r.status, 400);
   assert.equal(r.data.error.code, "weak_password");

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aura AI — твой ИИ-ассистент</title>
+  <meta name="description" content="Aura — ИИ-ассистент для iPhone, Android и браузера: общение, генерация изображений, код и идеи. История синхронизируется между устройствами.">
+  <meta name="theme-color" content="#07060b">
+  <meta property="og:title" content="Aura AI — твой ИИ-ассистент">
+  <meta property="og:description" content="Общение с ИИ, генерация изображений, код и идеи. iPhone, Android и веб.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/aura.css">
+  <style>
+    body { overflow-x: clip; }
+    .wrap { width: min(1160px, 100% - 40px); margin: 0 auto; }
+    section { padding: 88px 0; }
+    h1, h2, h3 { margin: 0; letter-spacing: -0.02em; }
+    h2 { font-size: clamp(30px, 4vw, 44px); line-height: 1.1; }
+    .eyebrow { display: inline-flex; gap: 8px; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--violet-light); }
+    .section-head { max-width: 640px; margin-bottom: 44px; }
+    .section-head p { font-size: 18px; color: var(--text-2); margin: 14px 0 0; }
+
+    /* Nav */
+    .nav { position: sticky; top: 0; z-index: 10; padding: 14px 0; }
+    .nav-inner { display: flex; align-items: center; gap: 24px; padding: 10px 12px 10px 14px; border-radius: 22px; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 20px; }
+    .brand .logo-tile { width: 38px; height: 38px; }
+    .brand .spark { width: 20px; height: 20px; }
+    .nav-links { display: flex; gap: 24px; margin-left: auto; }
+    .nav-links a { color: var(--text-2); font-weight: 500; font-size: 15px; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* Hero */
+    .hero { padding-top: 56px; }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
+    .hero h1 { font-size: clamp(42px, 6vw, 72px); line-height: 1.02; margin: 18px 0 20px; }
+    .hero h1 .grad { background: var(--grad-spark); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p.lead { font-size: 20px; color: var(--text-2); max-width: 540px; margin: 0 0 32px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+    .platforms { display: flex; gap: 18px; margin-top: 26px; color: var(--text-3); font-size: 14px; flex-wrap: wrap; }
+    .platforms span { display: inline-flex; gap: 6px; align-items: center; }
+
+    /* Phone mockup (built from the app's own components) */
+    .phone-stage { position: relative; display: grid; place-items: center; min-height: 620px; }
+    .phone-glow { position: absolute; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(circle, rgba(139, 92, 246, 0.45), transparent 65%); }
+    .phone {
+      position: relative; width: 320px; height: 640px; border-radius: 48px; padding: 14px;
+      background: linear-gradient(160deg, #24202f, #0d0c12); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float { 50% { transform: translateY(-14px) rotate(-1deg); } }
+    .screen { position: relative; height: 100%; border-radius: 36px; overflow: hidden; padding: 44px 16px 16px;
+      background: radial-gradient(120% 60% at 0% 0%, rgba(109, 40, 217, 0.5), transparent 60%), linear-gradient(180deg, #07060b, #131219); }
+    .screen::before { content: ""; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 96px; height: 26px; border-radius: 20px; background: #000; }
+    .m-head { display: flex; align-items: center; gap: 10px; }
+    .m-head .logo-tile { width: 46px; height: 46px; border-radius: 14px; }
+    .m-head .spark { width: 24px; height: 24px; }
+    .m-title { font-weight: 700; font-size: 24px; line-height: 1; }
+    .m-sub { font-size: 11px; color: var(--text-2); }
+    .m-pro { margin-left: auto; font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 999px; }
+    .m-hero { margin-top: 14px; height: 132px; border-radius: 22px; padding: 16px; background: var(--grad-hero); position: relative; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
+    .m-hero b { font-size: 22px; display: block; }
+    .m-hero span { font-size: 12px; color: var(--violet-light); display: block; width: 60%; }
+    .m-hero .tile { position: absolute; right: 14px; top: 26px; width: 74px; height: 74px; border-radius: 22px; display: grid; place-items: center; transform: rotate(-8deg); }
+    .m-hero .tile .spark { width: 38px; height: 38px; }
+    .m-hero .go { position: absolute; left: 16px; bottom: 14px; width: 32px; height: 32px; border-radius: 50%; background: var(--grad-primary); display: grid; place-items: center; }
+    .m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .m-card { display: flex; gap: 8px; align-items: center; padding: 10px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+    .m-card i { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; color: var(--lilac); background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(109, 40, 217, 0.15)); font-style: normal; }
+    .m-card .icon { width: 16px; height: 16px; }
+    .m-section { margin: 14px 2px 8px; font-weight: 700; font-size: 15px; }
+    .m-row { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 16px; margin-bottom: 7px; font-size: 12px; }
+    .m-row small { display: block; color: var(--text-2); font-size: 10px; }
+    .m-row i { color: var(--lilac); }
+    .m-composer { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; border-radius: 22px; font-size: 12px; color: var(--text-3); }
+    .m-composer .send { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: var(--grad-primary); display: grid; place-items: center; color: #fff; }
+    .chat-bubble { position: absolute; z-index: 2; padding: 12px 14px; border-radius: 18px; font-size: 14px; max-width: 210px; animation: float 7s ease-in-out infinite; }
+    .chat-bubble.one { left: -90px; top: 30px; animation-delay: -2s; }
+    .chat-bubble.two { right: -90px; bottom: 120px; animation-delay: -4s; }
+    .chat-bubble small { display: block; color: var(--text-3); font-size: 12px; margin-bottom: 4px; }
+
+    /* Features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature { padding: 26px; }
+    .feature .ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: var(--lilac);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(109, 40, 217, 0.15)); margin-bottom: 18px; }
+    .feature .ic .icon { width: 26px; height: 26px; }
+    .feature h3 { font-size: 20px; margin-bottom: 8px; }
+    .feature p { margin: 0; color: var(--text-2); }
+
+    /* Steps */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: step; }
+    .step { padding: 26px; }
+    .step::after { counter-increment: step; content: counter(step); position: absolute; right: 22px; top: 14px; font-size: 64px; font-weight: 800; color: rgba(255, 255, 255, 0.06); }
+    .step h3 { font-size: 19px; margin-bottom: 8px; }
+    .step p { margin: 0; color: var(--text-2); }
+
+    /* Plans */
+    .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 900px; }
+    .plan { padding: 30px; }
+    .plan.pro { background: var(--grad-hero); }
+    .plan h3 { font-size: 22px; display: flex; gap: 10px; align-items: center; }
+    .plan .price { font-size: 15px; color: var(--text-2); margin: 6px 0 20px; }
+    .plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    .plan li { display: flex; gap: 10px; align-items: flex-start; }
+    .plan li .icon { color: var(--lilac); margin-top: 2px; }
+    .plan.pro li .icon { color: var(--violet-light); }
+
+    /* Download */
+    .downloads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .dl { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+    .dl h3 { font-size: 21px; display: flex; gap: 10px; align-items: center; }
+    .dl p { margin: 0; color: var(--text-2); flex: 1; }
+    .dl .btn { width: 100%; }
+
+    /* FAQ */
+    .faq { display: grid; gap: 12px; max-width: 860px; }
+    .faq details { padding: 20px 24px; }
+    .faq summary { cursor: pointer; font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; color: var(--lilac); font-size: 22px; line-height: 1; transition: transform 0.2s; }
+    .faq details[open] summary::after { transform: rotate(45deg); }
+    .faq details p { color: var(--text-2); margin: 12px 0 0; }
+
+    footer { padding: 40px 0 60px; color: var(--text-3); font-size: 14px; }
+    footer .wrap { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+    footer .brand { font-size: 16px; }
+    footer nav { margin-left: auto; display: flex; gap: 20px; }
+    footer a { color: var(--text-2); }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    @media (max-width: 1240px) {
+      .chat-bubble.one { left: -20px; }
+      .chat-bubble.two { right: -20px; }
+    }
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .phone-stage { min-height: 600px; }
+      .features, .steps, .downloads { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 680px) {
+      section { padding: 64px 0; }
+      .nav-links { display: none; }
+      .nav .btn { margin-left: auto; }
+      .features, .steps, .downloads, .plans { grid-template-columns: 1fr; }
+      .chat-bubble { display: none; }
+      .phone { transform: scale(0.92); }
+    }
+  </style>
+</head>
+<body>
+  <div class="aura-bg"></div>
+
+  <header class="nav">
+    <div class="wrap">
+      <div class="nav-inner glass strong">
+        <a class="brand" href="#top"><span class="logo-tile glass strong"><span class="spark"></span></span>Aura</a>
+        <nav class="nav-links">
+          <a href="#features">Возможности</a>
+          <a href="#how">Как это работает</a>
+          <a href="#plans">Тарифы</a>
+          <a href="#download">Скачать</a>
+          <a href="#faq">Вопросы</a>
+        </nav>
+        <a class="btn btn-primary btn-sm" href="app/">Открыть Aura</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="reveal">
+          <span class="eyebrow glass">
+            <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
+            iPhone · Android · Веб
+          </span>
+          <h1>Твой <span class="grad">ИИ-ассистент</span>, который всегда рядом</h1>
+          <p class="lead">Aura отвечает на вопросы, пишет и объясняет код, придумывает идеи и рисует картинки. Начните разговор на телефоне и продолжите в браузере.</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="app/">
+              Открыть в браузере
+              <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a class="btn btn-glass" href="#download">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+              Скачать приложение
+            </a>
+          </div>
+          <div class="platforms">
+            <span><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Ключи ИИ только на сервере</span>
+            <span><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M21 12a9 9 0 0 1-15.7 6M3 12a9 9 0 0 1 15.7-6M21 3v5h-5M3 21v-5h5"/></svg>История на всех устройствах</span>
+          </div>
+        </div>
+
+        <div class="phone-stage reveal" aria-hidden="true">
+          <div class="phone-glow"></div>
+          <div class="chat-bubble one glass strong"><small>Вы</small>Придумай название для кофейни</div>
+          <div class="chat-bubble two glass strong"><small>Aura</small>«Тёплый угол», «Пенка», «Зерно и свет»…</div>
+          <div class="phone">
+            <div class="screen">
+              <div class="m-head">
+                <span class="logo-tile glass strong"><span class="spark"></span></span>
+                <div><div class="m-title">Aura</div><div class="m-sub">Твой ИИ-ассистент</div></div>
+                <span class="m-pro glass"><span class="gold">♛</span> Pro</span>
+              </div>
+              <div class="m-hero">
+                <b>Привет!</b>
+                <span>Чем я могу помочь тебе сегодня?</span>
+                <div class="tile glass strong"><span class="spark"></span></div>
+                <div class="go"><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;color:#fff"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+              </div>
+              <div class="m-grid">
+                <div class="m-card glass"><i><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></i>Чат</div>
+                <div class="m-card glass"><i><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></i>Картинки</div>
+                <div class="m-card glass"><i><svg class="icon" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></i>Код</div>
+                <div class="m-card glass"><i><svg class="icon" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></svg></i>Идеи</div>
+              </div>
+              <div class="m-section">Недавние чаты</div>
+              <div class="m-row glass"><i><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></i><div>План тренировок на неделю<small>2 мин назад</small></div></div>
+              <div class="m-row glass"><i><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></i><div>Обои в фиолетовых тонах<small>15 мин назад</small></div></div>
+              <div class="m-composer glass strong">Написать сообщение…<span class="send"><svg class="icon" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Всё, что нужно, в одном ассистенте</h2>
+          <p>Один аккаунт, три платформы и умный ИИ, который понимает текст, фото и документы.</p>
+        </div>
+        <div class="features">
+          <article class="feature glass reveal">
+            <div class="ic"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            <h3>Общение с ИИ</h3>
+            <p>Ответ появляется прямо по ходу генерации. Его можно остановить, повторить или скопировать.</p>
+          </article>
+          <article class="feature glass reveal">
+            <div class="ic"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></div>
+            <h3>Генерация изображений</h3>
+            <p>Опишите картинку, выберите стиль и формат. Все работы собираются в вашей галерее.</p>
+          </article>
+          <article class="feature glass reveal">
+            <div class="ic"><svg class="icon" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg></div>
+            <h3>Код</h3>
+            <p>Aura пишет функции и скрипты, объясняет чужой код по шагам и находит ошибки.</p>
+          </article>
+          <article class="feature glass reveal">
+            <div class="ic"><svg class="icon" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></svg></div>
+            <h3>Идеи</h3>
+            <p>Мозговой штурм для проекта, подарка, выходных или поста: 5–8 вариантов за секунды.</p>
+          </article>
+          <article class="feature glass reveal">
+            <div class="ic"><svg class="icon" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></div>
+            <h3>Фото и файлы</h3>
+            <p>Прикрепите фото, PDF или файл с кодом, и Aura разберёт его содержимое.</p>
+          </article>
+          <article class="feature glass reveal">
+            <div class="ic"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.7 6M3 12a9 9 0 0 1 15.7-6M21 3v5h-5M3 21v-5h5"/></svg></div>
+            <h3>Синхронизация</h3>
+            <p>Начните на iPhone, продолжите на Android или в браузере: история одна и та же.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Как это работает</h2>
+          <p>Приложения подключаются к вашему серверу Aura. Он хранит историю и обращается к ИИ.</p>
+        </div>
+        <div class="steps">
+          <div class="step glass reveal">
+            <h3>Создайте аккаунт</h3>
+            <p>Email и пароль. Один аккаунт работает на всех ваших устройствах.</p>
+          </div>
+          <div class="step glass reveal">
+            <h3>Спросите что угодно</h3>
+            <p>Выберите режим: чат, код или идеи. Можно прикрепить фото или документ.</p>
+          </div>
+          <div class="step glass reveal">
+            <h3>Продолжайте где удобно</h3>
+            <p>Все разговоры и картинки сразу появляются на телефоне и в браузере.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="plans">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Бесплатно, а с Pro — без ограничений</h2>
+          <p>Aura Pro оформляется в приложении для iPhone или Android и действует во всём аккаунте.</p>
+        </div>
+        <div class="plans">
+          <div class="plan glass reveal">
+            <h3>Бесплатно</h3>
+            <div class="price">Навсегда</div>
+            <ul>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>30 сообщений в день</li>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>5 изображений в день</li>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Чат, код, идеи, файлы</li>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Синхронизация истории</li>
+            </ul>
+          </div>
+          <div class="plan pro glass reveal">
+            <h3><span class="gold">♛</span> Aura Pro</h3>
+            <div class="price">Подписка в App Store или Google Play</div>
+            <ul>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>До 1000 сообщений в день</li>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>100 изображений в день</li>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Более глубокое мышление для кода и сложных вопросов</li>
+              <li><svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Одна подписка на все устройства</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Скачать Aura</h2>
+          <p>После установки на экране входа нажмите «Сервер» и укажите адрес вашего сервера Aura.</p>
+        </div>
+        <div class="downloads">
+          <div class="dl glass reveal">
+            <h3><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>Android</h3>
+            <p>Файл APK для Android 8 и новее. Разрешите установку из неизвестных источников.</p>
+            <a class="btn btn-primary" href="https://github.com/rgg85354-wq/aura-ai/releases/latest/download/Aura-AI.apk">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Скачать APK
+            </a>
+          </div>
+          <div class="dl glass reveal">
+            <h3><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4"/></svg>iPhone</h3>
+            <p>Файл IPA для iOS 17 и новее. Установите через Sideloadly или AltStore со своим Apple ID.</p>
+            <a class="btn btn-glass" href="https://github.com/rgg85354-wq/aura-ai/releases/latest/download/AuraAI-unsigned.ipa">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Скачать IPA
+            </a>
+          </div>
+          <div class="dl glass reveal">
+            <h3><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg>Браузер</h3>
+            <p>Ничего не нужно устанавливать: тот же аккаунт и та же история прямо на сайте.</p>
+            <a class="btn btn-glass" href="app/">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Открыть веб-версию
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head reveal"><h2>Частые вопросы</h2></div>
+        <div class="faq">
+          <details class="glass reveal">
+            <summary>Какой ИИ внутри?</summary>
+            <p>Текстовые ответы даёт языковая модель Claude, картинки создаёт подключённый сервис генерации изображений. Ключи доступа хранятся только на сервере Aura, в приложениях их нет.</p>
+          </details>
+          <details class="glass reveal">
+            <summary>Где хранится моя история?</summary>
+            <p>На сервере Aura, к которому подключены приложения. Поэтому история одинаковая на всех устройствах. Удалить чат, всю историю или аккаунт целиком можно в настройках.</p>
+          </details>
+          <details class="glass reveal">
+            <summary>Как установить IPA на iPhone?</summary>
+            <p>Скачайте Sideloadly или AltStore на компьютер, подключите iPhone кабелем, перетащите файл IPA и войдите со своим Apple ID. С бесплатным Apple ID приложение нужно переподписывать раз в 7 дней.</p>
+          </details>
+          <details class="glass reveal">
+            <summary>Что такое «адрес сервера»?</summary>
+            <p>Это адрес вашего сервера Aura, например https://140-238-1-2.sslip.io. Сервер можно бесплатно запустить одной командой на Oracle Cloud Always Free. Инструкция есть в репозитории проекта.</p>
+          </details>
+          <details class="glass reveal">
+            <summary>Сколько стоит?</summary>
+            <p>Пользоваться можно бесплатно в пределах дневных лимитов. Aura Pro снимает ограничения и оформляется как подписка в App Store или Google Play.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span class="brand"><span class="logo-tile glass strong" style="width:30px;height:30px"><span class="spark" style="width:16px;height:16px"></span></span>Aura</span>
+      <span>© <span id="year"></span> Aura AI</span>
+      <nav>
+        <a href="app/">Веб-версия</a>
+        <a href="https://github.com/rgg85354-wq/aura-ai">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    // Fade sections in as they scroll into view.
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+    }, { threshold: 0.12 });
+    document.querySelectorAll(".reveal").forEach((el, i) => {
+      el.style.transitionDelay = `${(i % 3) * 80}ms`;
+      io.observe(el);
+    });
+  </script>
+</body>
+</html>

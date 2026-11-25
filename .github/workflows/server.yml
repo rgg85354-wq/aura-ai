@@ -8,6 +8,7 @@ on:
     paths:
       - "server/**"
       - "deploy/**"
+      - "web/**"
       - ".github/workflows/server.yml"
 
 jobs:

@@ -1,4 +1,6 @@
+import fs from "node:fs";
 import os from "node:os";
+import path from "node:path";
 import express from "express";
 import { authRouter } from "./auth.js";
 import { chatsRouter } from "./chats.js";
@@ -12,6 +14,21 @@ import { subscriptionRouter } from "./subscription.js";
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", true);
+
+// The web app may be hosted elsewhere (e.g. GitHub Pages). Auth uses bearer tokens,
+// not cookies, so allowing any origin does not expose sessions.
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/") || req.path.startsWith("/files/")) {
+    res.set({
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, X-File-Name",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+      "Access-Control-Max-Age": "86400",
+    });
+    if (req.method === "OPTIONS") return res.sendStatus(204);
+  }
+  next();
+});
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -32,6 +49,16 @@ app.use("/api", authRouter);
 app.use("/api", chatsRouter);
 app.use("/api", imagesRouter);
 app.use("/api", subscriptionRouter);
+
+// Website: landing page at / and the web app at /app/ (folder web/ next to server/).
+const webDir = path.resolve(config.root, "..", "web");
+if (fs.existsSync(webDir)) {
+  app.use((req, res, next) => {
+    res.set({ "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin" });
+    next();
+  });
+  app.use(express.static(webDir, { maxAge: "1h" }));
+}
 
 app.use((req, res, next) => next(new HttpError(404, "not_found", "Адрес не найден")));
 // eslint-disable-next-line no-unused-vars
